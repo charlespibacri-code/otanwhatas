@@ -16,49 +16,52 @@
     small{display:block;margin-top:10px;color:#777}
   </style>
   <script>
-    // 1) Lista de números (formato internacional SEM "+")
+    // NÚMEROS (round-robin verdadeiro)
     const phones = [
       "351920301685",
       "351927998625"
     ];
 
-    // 2) Lista de frases base (sem encoding)
+    // FRASES (random)
     const messages = [
       "Oi eu gostaria de saber como ganhar dinheiro online?",
       "Ola eu gostaria de me tornar teu aluno"
     ];
 
-    // 3) Função round-robin (distribui em sequência)
-    function roundRobin(list, key) {
-      if (!list.length) return null;
+    // ROUND-ROBIN REAL (números alternam um por um)
+    function roundRobinPhone() {
       try {
-        const i = Math.floor(Math.random() * list.length);
-        const next = list[i % list.length];
-        sessionStorage.setItem(key, String(i + 1));
-        return next;
+        const k = "phone_rr_index";
+        const idx = Number(sessionStorage.getItem(k) || "0");
+        const phone = phones[idx % phones.length];
+        sessionStorage.setItem(k, String(idx + 1));
+        return phone;
       } catch {
-        return list[Math.floor(Math.random() * list.length)];
+        // fallback: random
+        return phones[Math.floor(Math.random() * phones.length)];
       }
     }
 
-    // 4) Monta links (app + web)
+    // RANDOM para frases
+    function randomMsg() {
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+
     function buildLinks() {
-      const phone = roundRobin(phones, "wa_rr_index");
-      const rawMsg = roundRobin(messages, "msg_rr_index");
+      const phone = roundRobinPhone();
+      const rawMsg = randomMsg();
       const msg = encodeURIComponent(rawMsg);
+
       return {
         app: `whatsapp://send?phone=${phone}&text=${msg}`,
         web: `https://wa.me/${phone}?text=${msg}`
       };
     }
 
-    // 5) Redireciona
     function redirect() {
       const { app, web } = buildLinks();
-      const a = document.getElementById("manual");
-      if (!web) return;
-      a.href = web;
-      a.rel = "noopener noreferrer";
+      const btn = document.getElementById("manual");
+      btn.href = web;
 
       let opened = false;
       const timer = setTimeout(() => {
